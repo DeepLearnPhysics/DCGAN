@@ -1,4 +1,38 @@
 import tensorflow as tf
+from tensorflow.examples.tutorials.mnist import input_data
+import numpy
+
+class mnist_helper(object):
+  """docstring for mnist_helper"""
+  def __init__(self):
+    super(mnist_helper, self).__init__()
+    self.mnist = input_data.read_data_sets('MNIST_data', one_hot=False)
+        
+
+  def next_multi_image_train(self, batch_size=16, width=2, return_labels=False):
+      # Build a (width, width) array of mnist images, each embedded into a 32x32 space
+      # instead of 28x28
+      # number of raw images will be batch_size * width * width
+      batch, labels = self.mnist.train.next_batch(batch_size*width*width)
+      
+      # build an output data container:
+      output = numpy.zeros((batch_size, 32*width, 32*width))
+      # Copy images to output:
+      image = 0
+      for i in xrange(batch_size):
+          for x in xrange(width):
+              for y in xrange(width):
+                  rand_x_shift = numpy.random.randint(4)
+                  rand_y_shift = numpy.random.randint(4)
+                  x_start = x*32 + rand_x_shift
+                  y_start = y*32 + rand_y_shift
+                  output[i,x_start:x_start+28, y_start:y_start+28] = 2*(batch[image].reshape((28,28))) -1
+                  image+= 1
+      if return_labels:
+        labels = labels.reshape((batch_size, width, width))
+        return output, labels
+      else:            
+        return output
 
 def leaky_relu(input_tensor, alpha=0.01):
     """
