@@ -103,3 +103,78 @@ def build_discriminator(input_tensor,
         # For the final activation, apply sigmoid:
         return tf.nn.sigmoid(x)
     
+
+
+
+def build_discriminator_progressive(input_tensor,
+                                    leaky_relu_param=0.0,
+                    n_filters=64,
+                    n_blocks = 2,
+                    is_training=True,
+                    reuse=True,):
+
+    """
+    This function will build a discriminator to decide if an image is real
+    or fake.
+    Starting at a low resolution of 4x4 output, and gradually increasing
+
+    To make it easy to reuse weights, every level has a fixed number of
+    filters
+
+    """
+
+    with tf.variable_scope("discriminator_progressive", reuse = tf.AUTO_REUSE):
+
+        # Map the initial set of random numbers to a 4x4xn_initial_filters space:
+
+        x = tf.layers.conv2d(input_tensor,
+                             n_filters,
+                             kernel_size=[3, 3],
+                             strides=[1, 1],
+                             padding='same',
+                             activation=None,
+                             use_bias=False,
+                             kernel_initializer=None,  # automatically uses Xavier initializer
+                             kernel_regularizer=None,
+                             activity_regularizer=None,
+                             trainable=is_training,
+                             name="Conv2D")
+    
+        current_size = int(x.get_shape()[1])
+
+        while current_size > 4:
+            current_size = int(x.get_shape()[1])
+
+            next_size = int(0.5*current_size)
+            subname = "{}to{}".format(current_size, next_size)
+            
+            x = residual_block(x,
+                               is_training,
+                               alpha=leaky_relu_param,
+                               name="res_block_{}".format(subname))
+
+
+            x = downsample_block(x,
+                                 is_training,
+                                 alpha=leaky_relu_param,
+                                 name="downsample_block_{}".format(subname))
+
+
+        # For global average pooling, need to get the shape of the input:
+        shape = (x.shape[1], x.shape[2])
+
+        x = tf.nn.pool(x,
+                       window_shape=shape,
+                       pooling_type="AVG",
+                       padding="VALID",
+                       dilation_rate=None,
+                       strides=None,
+                       name="GlobalAveragePool",
+                       data_format=None)
+        x = tf.reshape(x, (-1, 1))
+            
+        
+        # For the final activation, apply sigmoid:
+        return tf.nn.sigmoid(x)
+
+    return x
