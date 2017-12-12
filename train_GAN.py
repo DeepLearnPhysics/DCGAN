@@ -9,12 +9,12 @@ import numpy
 ###################################
 # Set up training parameters:     #
 ###################################
-BASE_LEARNING_RATE = 0.0001
-LOGDIR='/home/cadams/mnist_gan/logs/GAN'
-RESTORE=True
+BASE_LEARNING_RATE = 0.00001
+LOGDIR='/home/cadams/DCGAN/logs/GAN'
+RESTORE=False
 SAVE_ITERATION=500
 TRAIN_STEPS=100000
-BATCH_SIZE=32
+BATCH_SIZE=128
 
 ###################################
 # Build a classifier for mnist data
@@ -23,21 +23,21 @@ BATCH_SIZE=32
 # Prepare and input variable:
 
 # Input noise to the generator:
-noise_tensor = tf.placeholder(tf.float32, [int(BATCH_SIZE*0.5), 100], name="noise")
-# gen_input    = tf.reshape(noise_tensor, (tf.shape(noise_tensor)[0], 28,28, 1))
+noise_tensor = tf.placeholder(tf.float32, [int(BATCH_SIZE*0.5), 10*10], name="noise")
+gen_input    = tf.reshape(noise_tensor, (tf.shape(noise_tensor)[0], 10,10, 1))
 
 # Placeholder for the discriminator input:
 data_tensor  = tf.placeholder(tf.float32, [int(BATCH_SIZE*0.5), 784], name='x')
 # label_tensor = tf.placeholder(tf.float32, [BATCH_SIZE, 1], name='labels')
-x            = tf.reshape(data_tensor, (tf.shape(data_tensor)[0], 28, 28))
+x            = tf.reshape(data_tensor, (tf.shape(data_tensor)[0], 28, 28, 1))
 
 
 # Build a residual network on top of it, nothing complicated:
 # "Real" data logits:
 real_logits = build_discriminator(input_tensor=x, reuse=False)
 
-gen_images = build_generator(input_tensor=noise_tensor)
-gen_images = tf.reshape(gen_images, (tf.shape(gen_images)[0], 28, 28))
+gen_images = build_generator(input_tensor=gen_input)
+gen_images = tf.reshape(gen_images, (tf.shape(gen_images)[0], 28, 28, 1))
 
 
 # "Fake" data logits:
@@ -101,15 +101,15 @@ tf.summary.image('real_images', snap_shot_real, max_outputs=4)
 with tf.name_scope("training") as scope:
     # Make sure the optimizers are only operating on their own variables:
     all_variables = tf.trainable_variables()
-    discriminator_vars = [v for v in all_variables if v.name.startswith('mnist_discriminator/')]
-    generator_vars     = [v for v in all_variables if v.name.startswith('mnist_generator/')]
+    discriminator_vars = [v for v in all_variables if v.name.startswith('discriminator/')]
+    generator_vars     = [v for v in all_variables if v.name.startswith('generator/')]
     
     
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     with tf.control_dependencies(update_ops):
-        discriminator_optimizer = tf.train.AdamOptimizer(BASE_LEARNING_RATE).minimize(
+        discriminator_optimizer = tf.train.AdamOptimizer(BASE_LEARNING_RATE, 0.5).minimize(
             d_loss_total, global_step=global_step, var_list=discriminator_vars)
-        generator_optimizer     = tf.train.AdamOptimizer(BASE_LEARNING_RATE).minimize(
+        generator_optimizer     = tf.train.AdamOptimizer(BASE_LEARNING_RATE, 0.5).minimize(
             g_loss, global_step=global_step, var_list=generator_vars)
 
 

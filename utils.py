@@ -1,9 +1,18 @@
 import tensorflow as tf
 
+def leaky_relu(input_tensor, alpha=0.01):
+    """
+    @brief      Leaky Relu allows a small gradient to flow when values are below zero
+    
+    @param      alpha         Set alpha = 0 to reproduce the normal relu operation
+    """
+    return tf.maximum(input_tensor, alpha*input_tensor)
+
 def residual_block( input_tensor,
                    is_training,
                    kernel=[3, 3],
                    stride=[1, 1],
+                   alpha=0.0,
                    name="",
                    reuse=False):
     """
@@ -41,7 +50,7 @@ def residual_block( input_tensor,
                                           name="BatchNorm",
                                           reuse=reuse)
         # ReLU:
-        x = tf.nn.relu(x)
+        x = leaky_relu(x, alpha)
 
         # Conv2d:
         x = tf.layers.conv2d(x, n_filters,
@@ -78,7 +87,7 @@ def residual_block( input_tensor,
                                           name="BatchNorm",
                                           reuse=reuse)
         # ReLU:
-        x = tf.nn.relu(x)
+        x = leaky_relu(x, alpha)
 
         # Conv2d:
         x = tf.layers.conv2d(x,
@@ -105,6 +114,7 @@ def downsample_block(input_tensor,
                      is_training,
                      kernel=[3, 3],
                      stride=[1, 1],
+                     alpha=0.01,
                      name="",
                      reuse = False):
     """
@@ -142,7 +152,7 @@ def downsample_block(input_tensor,
                                           name="BatchNorm",
                                           reuse=reuse)
         # ReLU:
-        x = tf.nn.relu(x)
+        x = leaky_relu(x, alpha)
 
         # Conv2d:
         x = tf.layers.conv2d(x, n_filters,
@@ -179,7 +189,7 @@ def downsample_block(input_tensor,
                                           name="BatchNorm",
                                           reuse=reuse)
         # ReLU:
-        x = tf.nn.relu(x)
+        x = leaky_relu(x, alpha)
 
         # Conv2d:
         x = tf.layers.conv2d(x,
@@ -223,6 +233,7 @@ def upsample_block(input_tensor,
                    is_training,
                    kernel=[3, 3],
                    stride=[1, 1],
+                   alpha = 0.0,
                    name=""):
     """
     @brief      Create a residual block and apply it to the input tensor
@@ -261,7 +272,7 @@ def upsample_block(input_tensor,
                                           name="BatchNorm",
                                           reuse=None)
         # ReLU:
-        x = tf.nn.relu(x)
+        x = leaky_relu(x, alpha)
 
         # Conv2d:
         x = tf.layers.conv2d_transpose(x, n_filters,
@@ -274,7 +285,7 @@ def upsample_block(input_tensor,
                              kernel_regularizer=None,
                              activity_regularizer=None,
                              trainable=is_training,
-                             name="Conv2D",
+                             name="Conv2DTrans",
                              reuse=None)
 
     # Apply everything a second time:
@@ -298,7 +309,7 @@ def upsample_block(input_tensor,
                                           name="BatchNorm",
                                           reuse=None)
         # ReLU:
-        x = tf.nn.relu(x)
+        x = leaky_relu(x, alpha)
 
         # Conv2d:
         x = tf.layers.conv2d(x,
@@ -328,7 +339,7 @@ def upsample_block(input_tensor,
                              kernel_regularizer=None,
                              activity_regularizer=None,
                              trainable=is_training,
-                             name="Conv2D1x1",
+                             name="Conv2DTrans1x1",
                              reuse=None)
 
     # Sum the input and the output:
