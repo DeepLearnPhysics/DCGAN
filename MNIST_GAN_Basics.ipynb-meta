@@ -1,0 +1,8 @@
+Title: Generative Adversarial Networks: The Basics
+Slug: gan-00
+Lang: en
+Date: 2017-12-19
+Categories: Generative Adversarial Network, Fully Connected GAN
+Tags: MNIST, GAN, generative, adversarial
+Authors: Corey Adams
+Summary: An introduction to generative adversarial networks, covering the bare basics of how to build and train a GAN on mnist data.
